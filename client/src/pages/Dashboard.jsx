@@ -167,17 +167,31 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">🏅</div>
-          <div className="stat-content">
-            <h3>{weekly.this_week_kg.toFixed?.(2) ?? weekly.this_week_kg} kg</h3>
-            <p>This Week Emission</p>
-            <small>
-              Last week: {weekly.last_week_kg.toFixed?.(2) ?? weekly.last_week_kg} kg
-              {weekly.delta_kg > 0 ? ` (↓ ${weekly.delta_kg.toFixed(2)} kg)` : ` (↑ ${Math.abs(weekly.delta_kg).toFixed(2)} kg)`}
-            </small>
-          </div>
-        </div>
+        {(() => {
+  const weekly = dashboardData.weekly || {};
+
+  const thisWeek = Number(weekly.this_week_kg) || 0;
+  const lastWeek = Number(weekly.last_week_kg) || 0;
+  const delta = Number(weekly.delta_kg) || 0;
+
+  return (
+    <div className="stat-card">
+      <div className="stat-icon">🏅</div>
+      <div className="stat-content">
+        <h3>{thisWeek.toFixed(2)} kg</h3>
+        <p>This Week Emission</p>
+
+        <small>
+          Last week: {lastWeek.toFixed(2)} kg ·{" "}
+          {delta < 0
+            ? `↓ Reduced ${Math.abs(delta).toFixed(2)} kg`
+            : `↑ Increased ${delta.toFixed(2)} kg`}
+        </small>
+      </div>
+    </div>
+  );
+})()}
+
 
         <div className="stat-card">
           <div className="stat-icon">⭐</div>
@@ -252,40 +266,53 @@ const Dashboard = () => {
     <h2>Weekly Emission Progress</h2>
   </div>
 
-  <div className="weekly-grid">
-    <div className="weekly-box this-week">
-      <h3>This Week</h3>
-      <p className="value">{dashboardData.weekly.this_week_kg} kg CO₂</p>
-    </div>
+  {/* Extract safe numeric values */}
+  {(() => {
+    const weekly = dashboardData.weekly || {};
 
-    <div className="weekly-box last-week">
-      <h3>Last Week</h3>
-      <p className="value">{dashboardData.weekly.last_week_kg} kg CO₂</p>
-    </div>
+    const thisWeek = Number(weekly.this_week_kg) || 0;
+    const lastWeek = Number(weekly.last_week_kg) || 0;
+    const delta = Number(weekly.delta_kg) || 0;
+    const changePercentage = Number(dashboardData.stats.change_percentage) || 0;
 
-    <div className="weekly-box change">
-      <h3>Change</h3>
-      <p className={
-        dashboardData.weekly.delta_kg > 0 ? "value positive" : "value negative"
-      }>
-        {dashboardData.weekly.delta_kg > 0 ? "↓ Reduced " : "↑ Increased "}
-        {Math.abs(dashboardData.weekly.delta_kg)} kg
-      </p>
-      <span className="percentage">
-        {dashboardData.stats.change_percentage}% vs last week
-      </span>
-    </div>
-  </div>
+    return (
+      <>
+        <div className="weekly-grid">
+          <div className="weekly-box this-week">
+            <h3>This Week</h3>
+            <p className="value">{thisWeek.toFixed(2)} kg CO₂</p>
+          </div>
 
-  <div className="tips-container">
-    <h3>Sustainability Tips for You</h3>
-    <ul>
-      {dashboardData.weekly.tips.map((tip, idx) => (
-        <li key={idx}>• {tip}</li>
-      ))}
-    </ul>
-  </div>
+          <div className="weekly-box last-week">
+            <h3>Last Week</h3>
+            <p className="value">{lastWeek.toFixed(2)} kg CO₂</p>
+          </div>
+
+          <div className="weekly-box change">
+            <h3>Change</h3>
+            <p className={delta < 0 ? "value positive" : "value negative"}>
+              {delta < 0 ? "↓ Reduced " : "↑ Increased "}
+              {Math.abs(delta).toFixed(2)} kg
+            </p>
+            <span className="percentage">
+              {changePercentage.toFixed(1)}% vs last week
+            </span>
+          </div>
+        </div>
+
+        <div className="tips-container">
+          <h3>Sustainability Tips for You</h3>
+          <ul>
+            {(weekly.tips || []).map((tip, idx) => (
+              <li key={idx}>• {tip}</li>
+            ))}
+          </ul>
+        </div>
+      </>
+    );
+  })()}
 </div>
+
 
 
           {dashboardData?.category_breakdown?.length > 0 ? (
