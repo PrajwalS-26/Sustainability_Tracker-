@@ -1,0 +1,58 @@
+/* client/src/admin/admin.css */
+
+.admin-container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 1rem;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.admin-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1rem;
+}
+
+.admin-grid {
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom:1.5rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 6px 16px rgba(17,24,39,0.06);
+}
+
+.admin-list {
+  margin-top: 1rem;
+}
+
+.table {
+  width:100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.btn {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: none;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-danger { background: #ef4444; color:#fff; }
+.btn-primary { background: #10b981; color:#fff; }
+.small { font-size:0.9rem; padding:0.3rem 0.5rem; }
+.form-row { display:flex; gap:0.5rem; margin-bottom:0.5rem; }
+input, select, textarea { padding:0.5rem; border-radius:6px; border:1px solid #ddd; width:100%; }

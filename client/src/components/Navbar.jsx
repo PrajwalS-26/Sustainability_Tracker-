@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 function Navbar() {
   const { user, logout } = useAuth()
@@ -35,12 +35,19 @@ function Navbar() {
         {user ? (
           <>
             <span style={{ color: 'white' }}>Welcome, {user.first_name || user.firstName}</span>
+
             <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>Dashboard</Link>
             <Link to="/activities" style={{ color: 'white', textDecoration: 'none' }}>Activities</Link>
             <Link to="/challenges" style={{ color: 'white', textDecoration: 'none' }}>Challenges</Link>
             <Link to="/rewards" style={{ color: 'white', textDecoration: 'none' }}>Rewards</Link>
             <Link to="/news" style={{ color: 'white', textDecoration: 'none' }}>Sustainability News</Link>
 
+            {/* ⭐ ADMIN PANEL LINK (only visible for admin users) */}
+            {user.user_type === "admin" && (
+              <Link to="/admin" style={{ color: 'white', textDecoration: 'none' }}>
+                Admin Panel
+              </Link>
+            )}
 
             <button 
               onClick={handleLogout}

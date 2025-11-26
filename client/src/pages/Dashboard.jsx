@@ -170,9 +170,11 @@ const Dashboard = () => {
         {(() => {
   const weekly = dashboardData.weekly || {};
 
-  const thisWeek = Number(weekly.this_week_kg) || 0;
-  const lastWeek = Number(weekly.last_week_kg) || 0;
-  const delta = Number(weekly.delta_kg) || 0;
+  const thisWeek = Number(weekly.this_week_kg ?? weekly.this_week ?? 0) || 0;
+  const lastWeek = Number(weekly.last_week_kg ?? weekly.last_week ?? 0) || 0;
+
+  // Correct formula: last week - this week
+  const delta = lastWeek - thisWeek; 
 
   return (
     <div className="stat-card">
@@ -183,14 +185,15 @@ const Dashboard = () => {
 
         <small>
           Last week: {lastWeek.toFixed(2)} kg ·{" "}
-          {delta < 0
-            ? `↓ Reduced ${Math.abs(delta).toFixed(2)} kg`
-            : `↑ Increased ${delta.toFixed(2)} kg`}
+          {delta > 0
+            ? `↓ Reduced ${delta.toFixed(2)} kg`
+            : `↑ Increased ${Math.abs(delta).toFixed(2)} kg`}
         </small>
       </div>
     </div>
   );
 })()}
+
 
 
         <div className="stat-card">
@@ -266,14 +269,24 @@ const Dashboard = () => {
     <h2>Weekly Emission Progress</h2>
   </div>
 
-  {/* Extract safe numeric values */}
+  {/* safe numeric extraction + correct delta/percentage calculation */}
   {(() => {
     const weekly = dashboardData.weekly || {};
+    const thisWeekRaw = weekly.this_week_kg ?? weekly.this_week ?? 0;
+    const lastWeekRaw = weekly.last_week_kg ?? weekly.last_week ?? 0;
 
-    const thisWeek = Number(weekly.this_week_kg) || 0;
-    const lastWeek = Number(weekly.last_week_kg) || 0;
-    const delta = Number(weekly.delta_kg) || 0;
-    const changePercentage = Number(dashboardData.stats.change_percentage) || 0;
+    const thisWeek = Number(thisWeekRaw) || 0;
+    const lastWeek = Number(lastWeekRaw) || 0;
+
+    // delta = lastWeek - thisWeek
+    // >0  => reduction (we emitted less this week than last)
+    // <0  => increase (we emitted more this week than last)
+    const delta = lastWeek - thisWeek;
+
+    // percentage relative to lastWeek
+    const pctChange = lastWeek > 0 ? ((delta / lastWeek) * 100) : 0;
+
+    const tips = Array.isArray(weekly.tips) ? weekly.tips : [];
 
     return (
       <>
@@ -290,12 +303,15 @@ const Dashboard = () => {
 
           <div className="weekly-box change">
             <h3>Change</h3>
-            <p className={delta < 0 ? "value positive" : "value negative"}>
-              {delta < 0 ? "↓ Reduced " : "↑ Increased "}
+
+            {/* positive delta => reduced (down arrow), negative => increased (up arrow) */}
+            <p className={delta > 0 ? "value positive" : "value negative"}>
+              {delta > 0 ? "↓ Reduced " : "↑ Increased "}
               {Math.abs(delta).toFixed(2)} kg
             </p>
+
             <span className="percentage">
-              {changePercentage.toFixed(1)}% vs last week
+              {Math.abs(pctChange).toFixed(1)}% {delta > 0 ? 'reduction' : 'increase'} vs last week
             </span>
           </div>
         </div>
@@ -303,15 +319,16 @@ const Dashboard = () => {
         <div className="tips-container">
           <h3>Sustainability Tips for You</h3>
           <ul>
-            {(weekly.tips || []).map((tip, idx) => (
-              <li key={idx}>• {tip}</li>
-            ))}
+            {tips.length === 0 ? <li>No tips available right now.</li> :
+              tips.map((tip, idx) => <li key={idx}>• {tip}</li>)
+            }
           </ul>
         </div>
       </>
     );
   })()}
 </div>
+
 
 
 

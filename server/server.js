@@ -11,6 +11,8 @@ import challengeRoutes from './routes/challengeRoutes.js'
 import rewardRoutes from './routes/rewardRoutes.js'
 import emissionRoutes from './routes/emissionRoutes.js'
 import newsRoutes from './routes/newsRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import pointsRoutes from './routes/pointsRoutes.js';
 
 
 dotenv.config()
@@ -47,6 +49,8 @@ app.use('/api/challenges', challengeRoutes)
 app.use('/api/rewards', rewardRoutes)
 app.use('/api/emission-factors', emissionRoutes)
 app.use('/api/news', newsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/points', pointsRoutes);
 
 
 // Root endpoint

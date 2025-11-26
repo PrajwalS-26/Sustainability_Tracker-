@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
-import Navbar from './components/Layout/Navbar.jsx'
+import Navbar from './components/Navbar.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import Register from './pages/Register.jsx'
 import Login from './pages/Login.jsx'
@@ -9,6 +9,11 @@ import ActivityPage from './pages/ActivityPage.jsx'
 import ChallengesPage from './pages/ChallengesPage.jsx'
 import RewardsPage from './pages/RewardsPage.jsx'
 import NewsPage from './pages/NewsPage.jsx';
+import AdminRoute from './components/AdminRoute.jsx';
+import AdminDashboard from './admin/AdminDashboard.jsx';
+import ManageUsers from './admin/ManageUsers.jsx';
+import ManageChallenges from './admin/ManageChallenges.jsx';
+import ManageRewards from './admin/ManageRewards.jsx';
 
 //import './App.css'
 
@@ -74,6 +79,19 @@ function App() {
               element={<NewsPage />
               } 
               />
+
+              <Route path="/admin" element={
+  <AdminRoute><AdminDashboard /></AdminRoute>
+} />
+<Route path="/admin/users" element={
+  <AdminRoute><ManageUsers /></AdminRoute>
+} />
+<Route path="/admin/challenges" element={
+  <AdminRoute><ManageChallenges /></AdminRoute>
+} />
+<Route path="/admin/rewards" element={
+  <AdminRoute><ManageRewards /></AdminRoute>
+} />
 
               
               {/* Catch all route - redirect to home */}

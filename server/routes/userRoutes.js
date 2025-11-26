@@ -4,10 +4,10 @@ import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// ✅ Get Profile
+// Get Profile
 router.get('/profile', authenticateToken, getProfile);
 
-// ✅ Get Real-Time Points (used by Rewards Page & Profile Page)
+// Get Real-Time Points (SINGLE SOURCE)
 router.get('/points', authenticateToken, getUserPoints);
 
 export default router;

@@ -23,87 +23,67 @@ export const getRewards = async (req, res) => {
  * ✅ Redeem a reward
  */
 export const redeemReward = async (req, res) => {
-  const userId = req.user?.userId ?? req.user?.user_id;
+  const userId = req.user?.userId;
   const { reward_id } = req.body;
 
-  if (!userId) {
-    return res.status(401).json({ success: false, message: 'Unauthorized' });
-  }
-  if (!reward_id) {
-    return res.status(400).json({ success: false, message: 'reward_id is required' });
-  }
+  if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  if (!reward_id) return res.status(400).json({ success: false, message: 'reward_id required' });
 
-  const connection = await pool.getConnection();
-
+  const conn = await pool.getConnection();
   try {
-    await connection.beginTransaction();
+    await conn.beginTransaction();
 
-    // 1) Get reward details
-    const [[reward]] = await connection.execute(
+    // lock reward row
+    const [[rewardRow]] = await conn.execute(
       `SELECT reward_id, name, points_required, stock_count
-       FROM reward
-       WHERE reward_id = ?
-       FOR UPDATE`,
+       FROM reward WHERE reward_id = ? FOR UPDATE`,
       [reward_id]
     );
+    if (!rewardRow) throw new Error('Reward not found');
+    if (rewardRow.stock_count <= 0) throw new Error('Reward out of stock');
 
-    if (!reward) {
-      throw new Error('Reward not found');
-    }
-
-    if (reward.stock_count <= 0) {
-      throw new Error('Reward out of stock');
-    }
-
-    // 2) Compute user available points (same as Dashboard)
-    const [[pointsRow]] = await connection.execute(
-      `SELECT SUM(points_earned) AS total_points
-       FROM activity
-       WHERE user_id = ?`,
+    // lock user row
+    const [[userRow]] = await conn.execute(
+      `SELECT user_id, total_points FROM user WHERE user_id = ? FOR UPDATE`,
       [userId]
     );
+    if (!userRow) throw new Error('User not found');
 
-    const userPoints = Number(pointsRow.total_points || 0);
+    const available = Number(userRow.total_points || 0);
+    if (available < rewardRow.points_required) throw new Error('Not enough points');
 
-    if (userPoints < reward.points_required) {
-      throw new Error('Not enough points');
-    }
+    // decrement stock
+    await conn.execute(
+      `UPDATE reward SET stock_count = stock_count - 1 WHERE reward_id = ?`,
+      [rewardRow.reward_id]
+    );
 
-    // 3) Deduct stock (we do NOT touch user.total_points)
-   await connection.execute(
-  `UPDATE reward SET stock_count = stock_count - 1 WHERE reward_id = ?`,
-  [reward.reward_id]
-);
+    // insert redemption
+    await conn.execute(
+      `INSERT INTO redemption (user_id, reward_id, points_spent) VALUES (?, ?, ?)`,
+      [userId, rewardRow.reward_id, rewardRow.points_required]
+    );
 
-    // 4) Record redemption
-    await connection.execute(
-  `UPDATE user SET total_points = total_points - ? WHERE user_id = ?`,
-  [reward.points_required, userId]
-);
+    // update user's total_points atomically
+    await conn.execute(
+      `UPDATE user SET total_points = total_points - ? WHERE user_id = ?`,
+      [rewardRow.points_required, userId]
+    );
 
-// 5) Record redemption
-await connection.execute(
-  `INSERT INTO redemption (user_id, reward_id, points_spent)
-   VALUES (?, ?, ?)`,
-  [userId, reward.reward_id, reward.points_required]
-);
+    await conn.commit();
+    conn.release();
 
-    await connection.commit();
-    connection.release();
+    return res.json({ success: true, message: `Redeemed ${rewardRow.name}`, new_balance: available - rewardRow.points_required });
 
-    return res.json({
-      success: true,
-      message: `🎉 Successfully redeemed ${reward.name}!`,
-      new_balance: userPoints - reward.points_required
-    });
-
-  } catch (error) {
-    await connection.rollback();
-    connection.release();
-    console.error('❌ Redeem reward error:', error);
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    await conn.rollback();
+    conn.release();
+    console.error('Redeem error:', err);
+    return res.status(400).json({ success: false, message: err.message });
   }
 };
+
+
 
 /**
  * ✅ Get redemption history for current user

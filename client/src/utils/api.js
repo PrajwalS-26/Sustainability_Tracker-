@@ -21,23 +21,23 @@ export const registerUser = async (userData) => {
 
 export const loginUser = async (credentials) => {
   console.log('🟡 Sending login request:', credentials)
-  
+
   const response = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials)
-  })
-  
-  console.log('🟡 Login response status:', response.status)
-  
+  });
+
+  const data = await response.json();
+  console.log('🟡 Login response:', data);
+
   if (!response.ok) {
-    const errorText = await response.text()
-    console.log('🔴 Login error response:', errorText)
-    throw new Error('Login failed - check server connection')
+    throw new Error(data.message || 'Login failed');
   }
-  
-  return response.json()
-}
+
+  return data;
+};
+
 
 // Emission Factors API
 export const getEmissionFactors = async () => {
@@ -190,23 +190,17 @@ export const leaveChallenge = async (challengeId) => {
 }
 
 export const getUserPoints = async () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
 
-  const response = await fetch('/api/user/points', {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
+  const res = await fetch("/api/user/points", {
+    headers: { Authorization: `Bearer ${token}` }
   });
 
-  const data = await response.json();
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.message || 'Failed to fetch user points');
-  }
-
-  return Number(data.points || 0);
+  const data = await res.json();
+  return data.points; 
 };
+
+
 
 
 
@@ -368,4 +362,44 @@ export const getSustainabilityNews = async () => {
   return Array.isArray(data.data) ? data.data : [];
 };
 
+
+const token = () => localStorage.getItem("token");
+
+// Admin – Users
+export const getAdminUsers = async () => {
+  const res = await fetch("/api/admin/users", {
+    headers: { Authorization: `Bearer ${token()}` },
+  });
+  const data = await res.json();
+  return data.data;
+};
+
+// Admin – Challenges
+export const getAdminChallenges = async () => {
+  const res = await fetch("/api/admin/challenges", {
+    headers: { Authorization: `Bearer ${token()}` },
+  });
+  const data = await res.json();
+  return data.data;
+};
+
+export const createChallenge = async (payload) => {
+  const res = await fetch("/api/admin/challenges", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token()}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+};
+
+export const deleteChallenge = async (id) => {
+  const res = await fetch(`/api/admin/challenges/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token()}` }
+  });
+  return res.json();
+};
 

@@ -103,7 +103,13 @@ export const getUserPoints = async (req, res) => {
       [userId]
     );
 
-    const currentPoints = Number(earnedRow.earned) - Number(spentRow.spent);
+    const [[userRow]] = await pool.execute(
+  'SELECT total_points FROM user WHERE user_id = ?',
+  [userId]
+);
+
+const currentPoints = Number(userRow.total_points || 0);
+
 
     return res.json({ success: true, points: currentPoints });
 
